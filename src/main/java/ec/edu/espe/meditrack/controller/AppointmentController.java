@@ -12,28 +12,20 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-    /**
-     * Inyección de dependencias mediante constructor.
-     */
     public AppointmentController(AppointmentService appointmentService) {
         this.appointmentService = appointmentService;
     }
 
-    /**
-     * Devuelve únicamente las citas válidas.
-     * El retorno es Flux porque puede emitir varias citas.
-     */
     @GetMapping
     public Flux<Appointment> getAppointments() {
         return appointmentService.getValidAppointments();
     }
 
-    /**
-     * Busca una cita por su identificador.
-     * El retorno es Mono porque solamente puede existir una cita.
-     */
     @GetMapping("/{id}")
     public Mono<Appointment> getAppointmentById(@PathVariable String id) {
-        return appointmentService.findById(id);
+        return appointmentService.getValidAppointments()
+                .filter(appointment -> appointment.getId().equalsIgnoreCase(id))
+                .next()
+                .switchIfEmpty(Mono.error(new RuntimeException("No existe la cita con id: " + id)));
     }
 }
